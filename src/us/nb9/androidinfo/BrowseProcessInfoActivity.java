@@ -55,12 +55,13 @@ public class BrowseProcessInfoActivity extends Activity  implements OnItemClickL
 	
 		tvTotalProcessNo.setText("当前系统进程共有："+processInfoList.size());
 	}
+	
     //杀死该进程，并且刷新
 	@Override
 	public void onItemClick(AdapterView<?> arg0, View arg1,  final int position, long arg3) {
 		// TODO Auto-generated method stub
 	    new AlertDialog.Builder(this).setMessage("是否杀死该进程")
-	    .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+	    	.setPositiveButton("确定", new DialogInterface.OnClickListener() {
 			
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
@@ -84,6 +85,7 @@ public class BrowseProcessInfoActivity extends Activity  implements OnItemClickL
 			}
 		}).create().show() ;
 	}
+	
 	// 获得系统进程信息
 	private void getRunningAppProcessInfo() {
 		// ProcessInfo Model类   用来保存所有进程信息
