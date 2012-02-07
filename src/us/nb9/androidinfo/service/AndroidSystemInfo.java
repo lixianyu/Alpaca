@@ -11,7 +11,6 @@ import java.util.List;
 import us.nb9.androidinfo.AlpacaApp;
 import us.nb9.androidinfo.AlpacaConfig;
 import us.nb9.androidinfo.util.AlpacaUtil;
-
 import android.app.ActivityManager;
 import android.app.ActivityManager.MemoryInfo;
 import android.app.Service;
@@ -19,6 +18,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Debug;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -26,12 +27,14 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Process;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 public class AndroidSystemInfo extends Service {
 	private static final String TAG = "AndroidSystemInfo";
 	private static final boolean DEBUG = AlpacaConfig.ALPACA_DEBUG&&true;
     
+	private static AndroidSystemInfo mAndroidSystemInfo;
 	private static String mNetworkType;
 	private static ArrayList <String> mCpuList = null;
 	private static ArrayList <Long> mMemList = null;
@@ -72,8 +75,9 @@ public class AndroidSystemInfo extends Service {
             	
             case EVENT_DO :
             	mNetworkType = getNetworkType();
-            	beginCpuUtilizationRate();
-            	beginMemUtilizationRate();
+//            	beginCpuUtilizationRate();
+//            	beginMemUtilizationRate();
+            	getOsBuild();
             	break;
             	
             case EVENT_CPU_SNAPSHOT :
@@ -106,6 +110,7 @@ public class AndroidSystemInfo extends Service {
         mServiceLooper = thread.getLooper();
         mServiceHandler = new ServiceHandler(mServiceLooper);
 
+        mAndroidSystemInfo = this;
         mNetworkType = "Wifi";
         mCpuList = new ArrayList<String>();
         mMemList = new ArrayList<Long>();
@@ -339,9 +344,9 @@ public class AndroidSystemInfo extends Service {
 		return mNetworkType;
 	}
 	
-//	public static AndroidSystemInfo getInstance() {
-//		return AndroidSystemInfo.this;
-//	}
+	public static AndroidSystemInfo getInstance() {
+		return mAndroidSystemInfo;
+	}
 	
 	public static ArrayList<String> getCpuList() {
 		return mCpuList;
@@ -349,6 +354,57 @@ public class AndroidSystemInfo extends Service {
 	
 	public static ArrayList<Long> getMemList() {
 		return mMemList;
+	}
+	
+	/**
+	 * 获取手机的imei号（imei号是唯一识别手机的号码）
+	 * @return
+	 */
+	public String getIMEI() {
+		TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+		String imei = tm.getDeviceId();
+		if (DEBUG) Log.w(TAG, "imei = " + imei);
+		return imei;
+	}
+	
+	/**
+	 * 获取android id号（android id 是手机系统的唯一号码）
+	 * @return
+	 */
+	public String getAndroidID() {
+		String androidID = android.provider.Settings.System.getString(getContentResolver(), "android_id"); 
+	    if (DEBUG) Log.i(TAG, "androidID = " + androidID);
+	    return androidID;
+	}
+	
+	/**
+	 * 得到Wifi的MAC地址
+	 * @return
+	 */
+	public String getLocalMacAddress() {
+	    WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+	    WifiInfo info = wifi.getConnectionInfo();
+	    return info.getMacAddress();
+  	}
+	
+	public String getOsBuild() {
+		String phoneInfo = "Product: " + android.os.Build.PRODUCT;
+        phoneInfo += ", CPU_ABI: " + android.os.Build.CPU_ABI;
+        phoneInfo += ", TAGS: " + android.os.Build.TAGS;
+        phoneInfo += ", VERSION_CODES.BASE: " + android.os.Build.VERSION_CODES.BASE;
+        phoneInfo += ", MODEL: " + android.os.Build.MODEL;
+        phoneInfo += ", SDK: " + android.os.Build.VERSION.SDK;
+        phoneInfo += ", VERSION.RELEASE: " + android.os.Build.VERSION.RELEASE;
+        phoneInfo += ", DEVICE: " + android.os.Build.DEVICE;
+        phoneInfo += ", DISPLAY: " + android.os.Build.DISPLAY;
+        phoneInfo += ", BRAND: " + android.os.Build.BRAND;
+        phoneInfo += ", BOARD: " + android.os.Build.BOARD;
+        phoneInfo += ", FINGERPRINT: " + android.os.Build.FINGERPRINT;
+        phoneInfo += ", ID: " + android.os.Build.ID;
+        phoneInfo += ", MANUFACTURER: " + android.os.Build.MANUFACTURER;
+        phoneInfo += ", USER: " + android.os.Build.USER;
+        if (DEBUG) Log.d(TAG, "phoneInfo = " + phoneInfo);
+        return phoneInfo;
 	}
 	
 	public static boolean start(String pkgName) {
